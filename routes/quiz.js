@@ -1,4 +1,5 @@
 const express = require("express");
+const { isUserLoggedIn } = require("../middleware");
 const { Quiz } = require("../models");
 const router = express.Router();
 
@@ -38,9 +39,8 @@ router.param("quizId", async (req, res, next, id) => {
         },
       })
       .sort({ "leaderboard.score": "asc" });
-    if (!quiz) {
-      throw new Error("Quiz not found.");
-    }
+
+    if (!quiz) throw new Error("Quiz not found.");
 
     req.quiz = quiz;
     next();
@@ -49,15 +49,16 @@ router.param("quizId", async (req, res, next, id) => {
   }
 });
 
-router.route("/:quizId").get((req, res) => {
+router.get("/:quizId", isUserLoggedIn, (req, res) => {
   const { quiz } = req;
   res.json({ success: true, quiz });
 });
 
-router.post("/:quizId/leaderboard", async (req, res, next) => {
+router.post("/:quizId/leaderboard", isUserLoggedIn, async (req, res, next) => {
   try {
-    const { quiz } = req;
-    const { userId, score } = req.body;
+    const { quiz, user } = req;
+    const { score } = req.body;
+    const userId = user._id;
 
     let doesUserExists = false;
     quiz.leaderboard.forEach((doc) => {
@@ -77,11 +78,11 @@ router.post("/:quizId/leaderboard", async (req, res, next) => {
           limit: 5,
         },
       })
-      .sort({ "leaderboard.score": "asc" });
+      .sort({ "leaderboard.score": "desc" });
 
     return res.json({
       success: true,
-      message: "User score added",
+      message: "Score added successfully.",
       quiz: populatedQuiz,
     });
   } catch (error) {

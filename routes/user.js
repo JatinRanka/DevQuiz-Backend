@@ -1,18 +1,32 @@
 const express = require("express");
 const router = express.Router();
+const bcrypt = require("bcrypt");
 const { User } = require("../models");
+const { generateAuthToken } = require("../helper");
 
 router.post("/", async (req, res, next) => {
   try {
     const user = req.body;
     const newUser = new User(user);
+
+    const salt = await bcrypt.genSalt(10);
+    newUser.password = await bcrypt.hash(newUser.password, salt);
+
     const savedUser = await newUser.save();
 
-    res.status(200).json({
-      success: true,
-      message: "User created successfully.",
-      user: savedUser,
-    });
+    const token = generateAuthToken(savedUser);
+
+    res
+      .status(201)
+      .header({
+        Authorization: token,
+        "access-control-expose-headers": "Authorization",
+      })
+      .json({
+        success: true,
+        message: "User created successfully.",
+        user: savedUser,
+      });
   } catch (error) {
     next(error);
   }
@@ -21,16 +35,26 @@ router.post("/", async (req, res, next) => {
 router.post("/login", async (req, res, next) => {
   try {
     const { email, password } = req.body;
-    const user = await User.findOne({ email, password });
+    const user = await User.findOne({ email });
+    let isValidPassword;
 
-    if (!user) {
+    user && (isValidPassword = await bcrypt.compare(password, user.password));
+
+    if (!user || !isValidPassword) {
       return res.status(404).json({
         success: false,
         message: "Invalid credentials!",
       });
     }
 
-    res.json({ success: true, user });
+    const token = generateAuthToken(user);
+
+    res
+      .header({
+        Authorization: token,
+        "access-control-expose-headers": "Authorization",
+      })
+      .json({ success: true, user });
   } catch (error) {
     next(error);
   }
