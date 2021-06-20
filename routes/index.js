@@ -9,7 +9,10 @@ router.use("/users", userRouter);
 
 router.get("/", (req, res) => {
   console.log("Server is up and running.");
-  res.json({ success: true, message: "Server is up and running." });
+  res.json({
+    success: true,
+    message: "Server is up and running successfully.",
+  });
 });
 
 module.exports = { router };
