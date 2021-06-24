@@ -1,1 +1,7 @@
-# Quiz-TS-Backend
+# DevQuiz - Backend
+
+## Tech Stack
+
+- NodeJS
+- MongoDB
+- React
