@@ -1,5 +1,4 @@
 const express = require("express");
-const bodyParser = require("body-parser");
 const cors = require("cors");
 const mongoose = require("mongoose");
 
@@ -10,7 +9,7 @@ require("dotenv").config();
 
 const app = express();
 
-app.use(bodyParser.json());
+app.use(express.json());
 app.use(cors());
 
 // called before any route handler
@@ -38,5 +37,5 @@ app.use((error, req, res, next) => {
 });
 
 app.listen(PORT, () => {
-  console.log("Server started on port: ", PORT);
+  console.log(`Server started on port : ${PORT}`);
 });
